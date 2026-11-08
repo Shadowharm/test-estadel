@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    environment:
+      HOST: 0.0.0.0
+      PORT: "3000"
+      DATABASE_PATH: /app/data/events.db
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - monitor-data:/app/data
+    init: true
+    stop_grace_period: 30s
+volumes:
+  monitor-data:

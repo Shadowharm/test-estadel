@@ -1,0 +1,224 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "72140136-13bf-493d-9441-53efe2c739cc",
+  "prevId": "7e20f1d1-9f5f-452c-8dc6-96aaa4b16fde",
+  "tables": {
+    "app_meta": {
+      "name": "app_meta",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "events": {
+      "name": "events",
+      "columns": {
+        "seq": {
+          "name": "seq",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at_ms": {
+          "name": "created_at_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "received_at_ms": {
+          "name": "received_at_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "error_code": {
+          "name": "error_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "payload_json": {
+          "name": "payload_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "canonical_hash": {
+          "name": "canonical_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_sort": {
+          "name": "source_sort",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type_sort": {
+          "name": "type_sort",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "events_id_unique": {
+          "name": "events_id_unique",
+          "columns": ["id"],
+          "isUnique": true
+        },
+        "events_created_seq": {
+          "name": "events_created_seq",
+          "columns": ["created_at_ms", "seq"],
+          "isUnique": false
+        },
+        "events_source_created_seq": {
+          "name": "events_source_created_seq",
+          "columns": ["source", "created_at_ms", "seq"],
+          "isUnique": false
+        },
+        "events_type_created_seq": {
+          "name": "events_type_created_seq",
+          "columns": ["type", "created_at_ms", "seq"],
+          "isUnique": false
+        },
+        "events_source_seq": {
+          "name": "events_source_seq",
+          "columns": ["source_sort", "seq"],
+          "isUnique": false
+        },
+        "events_type_seq": {
+          "name": "events_type_seq",
+          "columns": ["type_sort", "seq"],
+          "isUnique": false
+        },
+        "events_status_seq": {
+          "name": "events_status_seq",
+          "columns": ["status", "seq"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "events_seq_safe": {
+          "name": "events_seq_safe",
+          "value": "\"events\".\"seq\" BETWEEN 1 AND 9007199254740991"
+        },
+        "events_id_length": {
+          "name": "events_id_length",
+          "value": "length(\"events\".\"id\") BETWEEN 1 AND 100 AND instr(\"events\".\"id\", char(0)) = 0"
+        },
+        "events_source_length": {
+          "name": "events_source_length",
+          "value": "length(\"events\".\"source\") BETWEEN 1 AND 100 AND instr(\"events\".\"source\", char(0)) = 0"
+        },
+        "events_type_length": {
+          "name": "events_type_length",
+          "value": "length(\"events\".\"type\") BETWEEN 1 AND 150 AND instr(\"events\".\"type\", char(0)) = 0"
+        },
+        "events_message_length": {
+          "name": "events_message_length",
+          "value": "length(\"events\".\"message\") BETWEEN 1 AND 2000 AND instr(\"events\".\"message\", char(0)) = 0"
+        },
+        "events_status": {
+          "name": "events_status",
+          "value": "\"events\".\"status\" IN ('success', 'error')"
+        },
+        "events_created_time": {
+          "name": "events_created_time",
+          "value": "\"events\".\"created_at_ms\" BETWEEN -62135596800000 AND 253402300799999"
+        },
+        "events_received_time": {
+          "name": "events_received_time",
+          "value": "\"events\".\"received_at_ms\" BETWEEN -62135596800000 AND 253402300799999"
+        },
+        "events_error_code": {
+          "name": "events_error_code",
+          "value": "\"events\".\"error_code\" IS NULL OR (\"events\".\"status\" = 'error' AND length(\"events\".\"error_code\") BETWEEN 1 AND 100 AND instr(\"events\".\"error_code\", char(0)) = 0)"
+        },
+        "events_payload": {
+          "name": "events_payload",
+          "value": "\"events\".\"payload_json\" IS NULL OR (json_valid(\"events\".\"payload_json\") AND json_type(\"events\".\"payload_json\") = 'object' AND length(CAST(\"events\".\"payload_json\" AS BLOB)) <= 16384)"
+        },
+        "events_hash": {
+          "name": "events_hash",
+          "value": "length(\"events\".\"canonical_hash\") = 64 AND \"events\".\"canonical_hash\" NOT GLOB '*[^0-9a-f]*'"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

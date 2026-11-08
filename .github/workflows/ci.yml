@@ -1,0 +1,66 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run test:http
+      - run: npx --no-install playwright install --with-deps chromium firefox webkit
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+  container:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t integration-monitor:ci .
+      - name: SQLite persistence and recovery in production image
+        run: |
+          volume="monitor-db-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker volume create "$volume"
+          trap 'docker volume rm "$volume"' EXIT
+          run_db() {
+            docker run --rm --mount "type=volume,source=$volume,target=/app/data" integration-monitor:ci node scripts/db.ts "$@"
+          }
+          run_db migrate
+          run_db seed
+          result="$(run_db seed)"
+          node -e 'const lines=process.argv[1].trim().split("\n"); const seed=JSON.parse(lines[0]); const db=JSON.parse(lines.at(-1)); if(seed.inserted!==0 || seed.existing!==360 || db.count!==360)process.exit(1)' "$result"
+          run_db backup /app/data/backup.db
+          result="$(run_db restore /app/data/backup.db /app/data/restored.db)"
+          node -e 'if(JSON.parse(process.argv[1]).count!==360)process.exit(1)' "$result"
+          run_db check
+      - name: Smoke container as non-root
+        run: |
+          docker run -d --name monitor --env HOST=127.0.0.1 integration-monitor:ci
+          trap 'docker logs monitor; docker rm -f monitor' EXIT
+          for attempt in $(seq 1 30); do
+            if docker exec monitor node -e "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"; then
+              docker exec monitor node -e "if(process.getuid()===0)process.exit(1)"
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1

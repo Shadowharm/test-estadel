@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1794058005621,
+      "tag": "0000_initial_storage",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794058365415,
+      "tag": "0001_exact_filter_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794129501910,
+      "tag": "0002_remove_auth",
+      "breakpoints": true
+    }
+  ]
+}
