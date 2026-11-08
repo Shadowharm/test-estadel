@@ -9,8 +9,8 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /events
     # Старт: сначала миграция и seed (идемпотентны), затем сервер.
-    # Это гарантирует, что seed-данные есть даже после сброса эфемерного диска.
-    dockerCommand: /bin/sh -c "node scripts/db.ts migrate && node scripts/db.ts seed && node scripts/container-entrypoint.ts"
+    # Скрипт лежит в образе (см. scripts/prepare-standalone.mjs) — без кавычек/&& в команде.
+    dockerCommand: /bin/sh scripts/render-start.sh
     envVars:
       - key: DATABASE_PATH
         value: /app/data/events.db

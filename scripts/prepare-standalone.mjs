@@ -13,6 +13,7 @@ for (const path of [
   "scripts/demo.ts",
   "scripts/storage-query-plans.ts",
   "scripts/check-runtime.mjs",
+  "scripts/render-start.sh",
   "src/server/db",
   "src/server/events",
   "src/server/config/schema.ts",
