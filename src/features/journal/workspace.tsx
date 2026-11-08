@@ -162,6 +162,7 @@ function JournalSurface({
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const [atHead, setAtHead] = useState(false);
   const [rowFocused, setRowFocused] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const toolbar = useRef<HTMLDivElement>(null);
   const viewKey = `${conditionParams(state, true)}:${revision}`;
   const reset = useCallback((message: string) => {
@@ -215,6 +216,16 @@ function JournalSurface({
     };
   }, []);
   useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 8);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+  useEffect(() => {
     const previous = window.history.scrollRestoration;
     window.history.scrollRestoration = "manual";
     const update = () => setOffline(!navigator.onLine);
@@ -253,111 +264,107 @@ function JournalSurface({
       <div className="journal-sticky" ref={toolbar} id="journal-toolbar">
         <div className="toolbar-controls">
           <Search state={state} apply={apply} serverError={invalidSearch} />
-          <div className="filter-controls">
-            <Filters state={state} apply={apply} snapshot={snapshot} />
-          </div>
-          <ExportButton
-            disabled={query.showingPrevious || query.isFetching}
-            selection={
-              snapshot && totals
-                ? {
-                    snapshot,
-                    count: totals.total,
-                    sort: displayedState.sort,
-                    direction: displayedState.direction,
-                  }
-                : undefined
-            }
-            refresh={refresh}
-          />
+          <Filters state={state} apply={apply} snapshot={snapshot} />
         </div>
-        {!overview && (
-          <div className="toolbar-summary">
+        <div className="toolbar-summary">
+          {!overview && (
+            <dl
+              className="totals-strip"
+              aria-label="Статистика текущей выборки"
+            >
+              <div>
+                <dt>Всего</dt>
+                <dd>{totals?.total.toLocaleString("ru-RU") ?? "…"}</dd>
+              </div>
+              <div>
+                <dt>
+                  <span aria-hidden="true" className="success-dot">
+                    ●
+                  </span>{" "}
+                  Успешно
+                </dt>
+                <dd>{totals?.success.toLocaleString("ru-RU") ?? "…"}</dd>
+              </div>
+              <div>
+                <dt>
+                  <span aria-hidden="true" className="error-dot">
+                    ●
+                  </span>{" "}
+                  Ошибки
+                </dt>
+                <dd>{totals?.error.toLocaleString("ru-RU") ?? "…"}</dd>
+              </div>
+            </dl>
+          )}
+          <div className="sort-controls">
             {!overview && (
-              <dl
-                className="totals-strip"
-                aria-label="Статистика текущей выборки"
-              >
-                <div>
-                  <dt>Всего</dt>
-                  <dd>{totals?.total.toLocaleString("ru-RU") ?? "…"}</dd>
-                </div>
-                <div>
-                  <dt>
-                    <span aria-hidden="true" className="success-dot">
-                      ●
-                    </span>{" "}
-                    Успешно
-                  </dt>
-                  <dd>{totals?.success.toLocaleString("ru-RU") ?? "…"}</dd>
-                </div>
-                <div>
-                  <dt>
-                    <span aria-hidden="true" className="error-dot">
-                      ●
-                    </span>{" "}
-                    Ошибки
-                  </dt>
-                  <dd>{totals?.error.toLocaleString("ru-RU") ?? "…"}</dd>
-                </div>
-              </dl>
-            )}
-            <div className="sort-controls">
-              {!overview && (
-                <>
-                  <label>
-                    <span className="sr-only">Сортировка</span>
-                    <select
-                      aria-label="Сортировка"
-                      value={state.sort}
-                      onChange={(e) =>
-                        apply({
-                          ...state,
-                          sort: e.target.value as Conditions["sort"],
-                        })
-                      }
-                    >
-                      {Object.entries(sorts).map(([v, l]) => (
-                        <option key={v} value={v}>
-                          {l}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <button
-                    className="icon-button"
-                    aria-label={
-                      state.direction === "desc"
-                        ? "По убыванию. Сортировать по возрастанию"
-                        : "По возрастанию. Сортировать по убыванию"
-                    }
-                    title={
-                      state.direction === "desc"
-                        ? "По убыванию"
-                        : "По возрастанию"
-                    }
-                    onClick={() =>
+              <>
+                <label>
+                  <span className="sr-only">Сортировка</span>
+                  <select
+                    aria-label="Сортировка"
+                    value={state.sort}
+                    onChange={(e) =>
                       apply({
                         ...state,
-                        direction: state.direction === "desc" ? "asc" : "desc",
+                        sort: e.target.value as Conditions["sort"],
                       })
                     }
                   >
-                    <Icon name={state.direction === "desc" ? "down" : "up"} />
-                  </button>
-                </>
-              )}
-              {!overview && (
+                    {Object.entries(sorts).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <button
-                  className="text-button back-to-top"
-                  onClick={() => window.scrollTo({ top: 0, behavior: "auto" })}
+                  className="icon-button"
+                  aria-label={
+                    state.direction === "desc"
+                      ? "По убыванию. Сортировать по возрастанию"
+                      : "По возрастанию. Сортировать по убыванию"
+                  }
+                  title={
+                    state.direction === "desc"
+                      ? "По убыванию"
+                      : "По возрастанию"
+                  }
+                  onClick={() =>
+                    apply({
+                      ...state,
+                      direction: state.direction === "desc" ? "asc" : "desc",
+                    })
+                  }
                 >
-                  Наверх <Icon name="up" size={14} />
+                  <Icon name={state.direction === "desc" ? "down" : "up"} />
                 </button>
-              )}
-            </div>
+              </>
+            )}
+            {!overview && scrolled && (
+              <button
+                className="text-button back-to-top"
+                onClick={() => window.scrollTo({ top: 0, behavior: "auto" })}
+              >
+                Наверх <Icon name="up" size={14} />
+              </button>
+            )}
+            <ExportButton
+              disabled={query.showingPrevious || query.isFetching}
+              selection={
+                snapshot && totals
+                  ? {
+                      snapshot,
+                      count: totals.total,
+                      sort: displayedState.sort,
+                      direction: displayedState.direction,
+                    }
+                  : undefined
+              }
+              refresh={refresh}
+            />
           </div>
-        )}
+        </div>
         <div
           className={`query-progress ${replacing ? "is-loading" : ""}`}
           role="status"

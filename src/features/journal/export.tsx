@@ -26,6 +26,7 @@ export function ExportButton({
   return (
     <>
       <button
+        className="export-button"
         disabled={disabled || !selection}
         onClick={() => setOpened(selection)}
       >
