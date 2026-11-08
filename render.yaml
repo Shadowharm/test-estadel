@@ -1,0 +1,19 @@
+# Render Blueprint — развёртывание в один клик.
+# В Render: New → Blueprint → выбрать этот репозиторий. Файл подхватится автоматически.
+services:
+  - type: web
+    name: integration-monitor
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /events
+    # Старт: сначала миграция и seed (идемпотентны), затем сервер.
+    # Это гарантирует, что seed-данные есть даже после сброса эфемерного диска.
+    dockerCommand: /bin/sh -c "node scripts/db.ts migrate && node scripts/db.ts seed && node scripts/container-entrypoint.ts"
+    envVars:
+      - key: DATABASE_PATH
+        value: /app/data/events.db
+      - key: HOST
+        value: 0.0.0.0
+      # PORT Render выставляет сам (обычно 10000) — приложение слушает $PORT.
